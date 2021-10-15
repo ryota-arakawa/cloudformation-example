@@ -1,6 +1,20 @@
+stackName := example
+
+ifeq ($(target), )
+	@echo "you must add argument target"
+	@exit 1
+endif
+
+# check arguments correctly
+# make test target="test"
+test:
+	echo "target is $(target)"
+	echo "stackName is $(stackName)"
+
 deploy:
-	aws cloudformation deploy --template-file vpc.yaml \
-		--stack-name main-vpc \
+	aws cloudformation deploy \
+		--stack-name $(stackName)-$(target) \
+		--template-file $(target).yaml \
 		--parameter-overrides \
-		file://parameter.json \
+		file://parameters/$(target).json \
 		--capabilities CAPABILITY_NAMED_IAM
