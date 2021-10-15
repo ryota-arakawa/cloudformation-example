@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'VPC: Gateway Endpoint (DynamoDB), a cloudonaut.io template'
+
+Resources:
+  Endpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      RouteTableIds: !Split [',', !Join [',', [{'Fn::ImportValue': !Sub 'example-vpc-public-rtb'}, {'Fn::ImportValue': !Sub 'example-vpc-private-az-a-rtb'}]]]
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
+      VpcId: {'Fn::ImportValue': !Sub 'example-vpc-vpc-id'}
+
+Outputs:
+  TemplateID:
+    Description: 'cloudonaut.io template id.'
+    Value: 'vpc/vpc-endpoint-dynamodb'
+  TemplateVersion:
+    Description: 'cloudonaut.io template version.'
+    Value: '__VERSION__'
+  StackName:
+    Description: 'Stack name.'
+    Value: !Sub '${AWS::StackName}'
+  Endpoint:
+    Description: 'The VPC endpoint to DynamoDB.'
+    Value: !Ref Endpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-Endpoint'

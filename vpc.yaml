@@ -68,6 +68,7 @@ Conditions:
   HighlyAvailable: !Equals [!Ref HighlyAvailableNat, "true"]
   NotHighlyAvailable: !Equals [!Ref HighlyAvailableNat, "false"]
   VpcFlowLogs: !Equals [!Ref EnableVpcFlowLogs, "true"]
+
 # Outputsを指定するとGUI上の出力タブに載る
 Outputs:
   VpcId:
