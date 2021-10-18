@@ -7,7 +7,7 @@ Description: HelloWorld Lambda function template for Application Load Balancer L
 #    Type: AWS::EC2::VPC::Id
 
 Resources:
-  HelloWorldFunction:
+  SimpleFunction:
     Type: AWS::Serverless::Function
     Properties:
       Description: An Application Load Balancer Lambda Target that returns "HelloWorld"
@@ -25,6 +25,60 @@ Resources:
             "body": "<h1>Hello from Lambda!</h1>"
           }
       Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LoadBalancerSecurityGroup
+        SubnetIds:
+          # マルチAZならここを増やす
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+
+  DyanamodbStreamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: An Application Load Balancer Lambda Target that returns "HelloWorld"
+      Handler: index.handler
+      Runtime: python3.7
+      InlineCode: |
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "statusDescription": "HTTP OK",
+            "isBase64Encoded": False,
+            "headers": {
+              "Content-Type": "text/html"
+            },
+            "body": "<h1>Hello from Lambda!</h1>"
+          }
+      Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LoadBalancerSecurityGroup
+        SubnetIds:
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+
+  SqsTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: An Application Load Balancer Lambda Target that returns "HelloWorld"
+      Handler: index.handler
+      Runtime: python3.7
+      InlineCode: |
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "statusDescription": "HTTP OK",
+            "isBase64Encoded": False,
+            "headers": {
+              "Content-Type": "text/html"
+            },
+            "body": "<h1>Hello from Lambda!</h1>"
+          }
+      Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LoadBalancerSecurityGroup
+        SubnetIds:
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -40,7 +94,7 @@ Resources:
     Properties:
       TargetType: lambda
       Targets:
-        - Id: !GetAtt HelloWorldFunction.Arn
+        - Id: !GetAtt SimpleFunction.Arn
 
   HttpListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
@@ -66,7 +120,7 @@ Resources:
   HelloWorldFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt HelloWorldFunction.Arn
+      FunctionName: !GetAtt SimpleFunction.Arn
       Action: 'lambda:InvokeFunction'
       Principal: elasticloadbalancing.amazonaws.com
 
