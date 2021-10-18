@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'VPC: Gateway Endpoint (DynamoDB), a cloudonaut.io template'
 
 Resources:
+  # dynamodbをVPC内からアクセスするためのエンドポイントを作成する
   Endpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
