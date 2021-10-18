@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Create SQS for ENV'
+# --------------------------------------------- #
+# 画面に表示するパラメータ
+# --------------------------------------------- #
+Metadata:
+  "AWS::CloudFormation::Interface":
+    ParameterGroups:
+      - Label:
+          default: "input your environment(dev or staging or production)"
+        Parameters:
+          - ENV
+
+# --------------------------------------------- #
+# Input Parameters
+# --------------------------------------------- #
+Parameters:
+  ENV:
+    Type: String
+    Default: "dev"
+
+Resources:
+  # ----------------------------------------------------- #
+  # SQS Settings
+  # ----------------------------------------------------- #
+  DevelopmentFIFOQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      # FIFOキューの重複排除を有効化
+      ContentBasedDeduplication: true
+      # メッセージ配信遅延時間(秒) => Default 0秒
+      DelaySeconds: 0
+      # 先入れ先出しキューを生成
+      FifoQueue: true
+      # メッセージの最大バイト数 => Default 262144B(256KB)
+      MaximumMessageSize: 262144
+      # SQSのメッセージ保持秒数 => Default 4日
+      MessageRetentionPeriod: 345600
+      QueueName: !Sub ${ENV}-myapp-mail.fifo
+      # workerの負荷を抑えるためにロングポーリングにする => 最大20秒
+      ReceiveMessageWaitTimeSeconds: 20
+      Tags:
+        -
+          Key: Name
+          Value: !Sub ${ENV}-myapp-mail.fifo
+      # キューからメッセージ配信された後にメッセージを利用できなくなる時間の長さ(秒) => Default 30秒
+      VisibilityTimeout: 30
+
+  SqsQaueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Id: !Ref DevelopmentFIFOQueue
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Allow-User-SendMessage
+            Effect: Allow
+            # dev環境はすべてのユーザにアクセス権限を付与する
+            # TODO: SQS API用のIAMユーザを作成して、指定する
+            # https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-basic-examples-of-sqs-policies.html
+            Principal: "*"
+            Action: "sqs:*"
+            Resource:
+              !GetAtt DevelopmentFIFOQueue.Arn
+      # ポリシー追加先のキューURL
+      Queues:
+        - !Ref DevelopmentFIFOQueue
+
+# --------------------------------------------- #
+# Output Parameters
+# --------------------------------------------- #
+# 他のスタックからパラメータ参照するためにOutputsで定義する
+Outputs:
+  QueueName:
+    Value:
+      !GetAtt DevelopmentFIFOQueue.QueueName
+    Export:
+      Name: !Sub ${ENV}-myapp-mail-queue-name
+  QueueArn:
+    Value:
+      !GetAtt DevelopmentFIFOQueue.Arn
+    Export:
+      Name: !Sub ${ENV}-myapp-mail-queue-arn
