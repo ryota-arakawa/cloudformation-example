@@ -2,11 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: HelloWorld Lambda function template for Application Load Balancer Lambda as target
 
-Parameters:
-  Subnets:
-    Type: List<AWS::EC2::Subnet::Id>
-  VpcId:
-    Type: AWS::EC2::VPC::Id
+#Parameters:
+#  VpcId:
+#    Type: AWS::EC2::VPC::Id
 
 Resources:
   HelloWorldFunction:
@@ -32,7 +30,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
-      Subnets: !Ref Subnets
+      Subnets: [ 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet', 'Fn::ImportValue': !Sub 'example-vpc-public-az-b-subnet' ]
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
 
@@ -58,7 +56,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow http to client host
-      VpcId: !Ref VpcId
+      VpcId: !ImportValue example-vpc-vpc-id
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
