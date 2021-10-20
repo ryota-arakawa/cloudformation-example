@@ -2,9 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: HelloWorld Lambda function template for Application Load Balancer Lambda as target
 
-#Parameters:
-#  VpcId:
-#    Type: AWS::EC2::VPC::Id
+Parameters:
+  ItemsArn:
+    Type: String
 
 Resources:
   SimpleFunction:
@@ -55,6 +55,14 @@ Resources:
           - !Ref LoadBalancerSecurityGroup
         SubnetIds:
           - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref ItemsArn
+            BatchSize: 100
+            StartingPosition: LATEST
 
   SqsTriggerFunction:
     Type: AWS::Serverless::Function
@@ -123,6 +131,49 @@ Resources:
       FunctionName: !GetAtt SimpleFunction.Arn
       Action: 'lambda:InvokeFunction'
       Principal: elasticloadbalancing.amazonaws.com
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow Lambda to assume this role
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: LambdaRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Allow Lambda to write logs to CloudWatch
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              # Allow Lambda to read from the DynamoDB stream
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                  - ec2:AssignPrivateIpAddresses
+                  - ec2:UnassignPrivateIpAddresses
+                Resource: "*"
 
 Outputs:
   LoadBalancerDNSNAme:
