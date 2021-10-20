@@ -87,6 +87,7 @@ Resources:
           - !Ref LoadBalancerSecurityGroup
         SubnetIds:
           - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -174,6 +175,12 @@ Resources:
                   - ec2:AssignPrivateIpAddresses
                   - ec2:UnassignPrivateIpAddresses
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: arn:aws:sqs:*
 
 Outputs:
   LoadBalancerDNSNAme:
