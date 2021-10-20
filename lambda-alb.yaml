@@ -89,6 +89,13 @@ Resources:
           - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
       Role: !GetAtt LambdaRole.Arn
 
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      EventSourceArn: { 'Fn::ImportValue': !Sub 'dev-myapp-mail-queue-arn' }
+      FunctionName: !GetAtt SqsTriggerFunction.Arn
+
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
