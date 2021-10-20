@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
-Description: HelloWorld Lambda function template for Application Load Balancer Lambda as target
+Description: 'Create Lambda functions and application loadbalancer'
 
 Parameters:
   ItemsArn:
