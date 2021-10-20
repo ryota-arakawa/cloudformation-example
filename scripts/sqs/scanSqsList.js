@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-// Set the region
+
 AWS.config.update({ region: 'ap-northeast-1' });
 
 (async () => {
