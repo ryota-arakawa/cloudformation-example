@@ -22,6 +22,30 @@ Resources:
       Port: 80
       Protocol: HTTP
 
+  lisnerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !ImportValue target-group-arn
+      Conditions:
+        - Field: path-pattern
+          Values: ['/static/*']
+      ListenerArn: !Ref HttpListener
+      Priority: 10
+
+#  SubListenerRule:
+#    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+#    Properties:
+#      Actions:
+#        - Type: forward
+#          TargetGroupArn: !ImportValue target-group-arn
+#      Conditions:
+#        - Field: path-pattern
+#          Values: !Sub arn/*
+#      ListenerArn: !Ref LoadBalancer
+#      Priority: 10
+
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
