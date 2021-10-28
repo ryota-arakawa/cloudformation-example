@@ -2,6 +2,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: 'Crate VPC'
 
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
 Parameters:
   VpcCidrParam:
     Type: String
@@ -61,80 +64,21 @@ Parameters:
     Default: "false"
     ConstraintDescription: must be true or false (case sensitive).
 
+# --------------------------------------------- #
+# Conditions
+# --------------------------------------------- #
 Conditions:
   HighlyAvailable: !Equals [!Ref HighlyAvailableNat, "true"]
   NotHighlyAvailable: !Equals [!Ref HighlyAvailableNat, "false"]
   VpcFlowLogs: !Equals [!Ref EnableVpcFlowLogs, "true"]
 
-# Outputsを指定するとGUI上の出力タブに載る
-Outputs:
-  VpcId:
-    Description: VPC Id
-    Value: !Ref Vpc
-    Export:
-      Name: !Sub "${AWS::StackName}-vpc-id"
-
-  PublicRouteTableId:
-    Description: Route Table for public subnets
-    Value: !Ref PublicRouteTable
-    Export:
-      Name: !Sub "${AWS::StackName}-public-rtb"
-
-  PublicAZASubnetId:
-    Description: Availability Zone A public subnet Id
-    Value: !Ref PublicAZASubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-public-az-a-subnet"
-
-  PublicAZBSubnetId:
-    Description: Availability Zone B public subnet Id
-    Value: !Ref PublicAZBSubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-public-az-b-subnet"
-
-  PublicAZCSubnetId:
-    Description: Availability Zone C public subnet Id
-    Value: !Ref PublicAZCSubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-public-az-c-subnet"
-
-  PrivateAZASubnetId:
-    Description: Availability Zone A private subnet Id
-    Value: !Ref PrivateAZASubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-a-subnet"
-
-  PrivateAZBSubnetId:
-    Description: Availability Zone B private subnet Id
-    Value: !Ref PrivateAZBSubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-b-subnet"
-
-  PrivateAZCSubnetId:
-    Description: Availability Zone C private subnet Id
-    Value: !Ref PrivateAZCSubnet
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-c-subnet"
-
-  PrivateAZARouteTableId:
-    Description: Route table for private subnets in AZ A
-    Value: !Ref PrivateAZARouteTable
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-a-rtb"
-
-  PrivateAZBRouteTableId:
-    Description: Route table for private subnets in AZ B
-    Value: !Ref PrivateAZBRouteTable
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-b-rtb"
-
-  PrivateAZCRouteTableId:
-    Description: Route table for private subnets in AZ C
-    Value: !Ref PrivateAZCRouteTable
-    Export:
-      Name: !Sub "${AWS::StackName}-private-az-c-rtb"
-
+# --------------------------------------------- #
+# Resources
+# --------------------------------------------- #
 Resources:
+  # --------------------------------------------- #
+  # VPC
+  # --------------------------------------------- #
   Vpc:
     Type: AWS::EC2::VPC
     Properties:
@@ -443,7 +387,9 @@ Resources:
       SubnetId: !Ref PrivateAZCSubnet
       RouteTableId: !Ref PrivateAZCRouteTable
 
-
+  # --------------------------------------------- #
+  # Endpoint
+  # --------------------------------------------- #
   S3VPCEndpoint:
     Type: "AWS::EC2::VPCEndpoint"
     Properties:
@@ -476,6 +422,9 @@ Resources:
       VpcId: !Ref Vpc
       VpcEndpointType: Gateway
 
+  # --------------------------------------------- #
+  # Log Group
+  # --------------------------------------------- #
   # VPC Flow Logs
   FlowLogLogGroup:
     Type: AWS::Logs::LogGroup
@@ -524,6 +473,9 @@ Resources:
       ResourceType: VPC
       TrafficType: ALL
 
+  # --------------------------------------------- #
+  # Security Group
+  # --------------------------------------------- #
   SecurityGroup:
     Properties:
       GroupDescription: Security group
@@ -538,3 +490,86 @@ Resources:
           ToPort: '80'
       VpcId: !Ref Vpc
     Type: AWS::EC2::SecurityGroup
+
+# --------------------------------------------- #
+# Outputs
+# --------------------------------------------- #
+# Outputsを指定するとGUI上の出力タブに載る
+Outputs:
+  VpcId:
+    Description: VPC Id
+    Value: !Ref Vpc
+    Export:
+      Name: !Sub "${AWS::StackName}-vpc-id"
+
+  PublicRouteTableId:
+    Description: Route Table for public subnets
+    Value: !Ref PublicRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-public-rtb"
+
+  PublicAZASubnetId:
+    Description: Availability Zone A public subnet Id
+    Value: !Ref PublicAZASubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-public-az-a-subnet"
+
+  PublicAZBSubnetId:
+    Description: Availability Zone B public subnet Id
+    Value: !Ref PublicAZBSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-public-az-b-subnet"
+
+  PublicAZCSubnetId:
+    Description: Availability Zone C public subnet Id
+    Value: !Ref PublicAZCSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-public-az-c-subnet"
+
+  PrivateAZASubnetId:
+    Description: Availability Zone A private subnet Id
+    Value: !Ref PrivateAZASubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-a-subnet"
+
+  PrivateAZBSubnetId:
+    Description: Availability Zone B private subnet Id
+    Value: !Ref PrivateAZBSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-b-subnet"
+
+  PrivateAZCSubnetId:
+    Description: Availability Zone C private subnet Id
+    Value: !Ref PrivateAZCSubnet
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-c-subnet"
+
+  PrivateAZARouteTableId:
+    Description: Route table for private subnets in AZ A
+    Value: !Ref PrivateAZARouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-a-rtb"
+
+  PrivateAZBRouteTableId:
+    Description: Route table for private subnets in AZ B
+    Value: !Ref PrivateAZBRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-b-rtb"
+
+  PrivateAZCRouteTableId:
+    Description: Route table for private subnets in AZ C
+    Value: !Ref PrivateAZCRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-private-az-c-rtb"
+
+  S3VPCEndpoint:
+    Description: S3 VPC Endpoint
+    Value: !Ref S3VPCEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-vpc-s3-vpc-endpoint'
+
+  DyanmodbVPCEndpoint:
+    Description: Dynamodb VPC Endpoint
+    Value: !Ref DynamoDBVPCEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-vpc-dynamodb-vpc-endpoint'
