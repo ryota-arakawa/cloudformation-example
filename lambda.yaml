@@ -10,22 +10,29 @@ Globals:
 # Parameters
 # --------------------------------------------- #
 Parameters:
+  ProjectName:
+    Type: String
+
   DynamoDBEndpoint:
     Type: String
     Description: DynamoDB Endpoint
     # output.yamlはcloudformation実行用のyamlファイル（クラウドにあてる用）のためpublicのpath
     # dynamodbがvpnであれば別スタックで定義してあるvpnのエンドポイントを参照する
     Default: https://dynamodb.ap-northeast-1.amazonaws.com
+
   Region:
     Type: String
     Description: AWS Deploy Region
     Default: ap-northeast-1
+
   S3Path:
     Type: String
     Default: example-lambda-1634779516
+
   CommonResourcesLayerVersion:
     Type: String
     Default: v1.0
+
   GreetingVersion:
     Type: String
     Default: v1.0
@@ -41,7 +48,8 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow http to client host
-      VpcId: !ImportValue example-vpc-vpc-id
+#      VpcId: !ImportValue ${ProjectName}-vpc-id
+      VpcId: { "Fn::ImportValue": { "Fn::Sub": "${ProjectName}-vpc-id" } }
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -97,7 +105,7 @@ Resources:
           - !Ref LambdaSecurityGroup
         SubnetIds:
           # マルチAZならここを増やす
-          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+          - 'Fn::ImportValue': !Sub '${ProjectName}-public-az-a-subnet'
       Role: !GetAtt LambdaRole.Arn
 
   # --------------------------------------------- #
@@ -219,4 +227,4 @@ Outputs:
   TargetGroupArn:
     Value: !Ref TargetGroup
     Export:
-      Name: target-group-arn
+      Name: !Sub ${ProjectName}-target-group-arn
