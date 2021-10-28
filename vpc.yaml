@@ -6,6 +6,9 @@ Description: 'Crate VPC'
 # Parameters
 # --------------------------------------------- #
 Parameters:
+  ProjectName:
+    Type: String
+    
   VpcCidrParam:
     Type: String
     Description: VPC CIDR. For more info, see http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#VPC_Sizing
@@ -87,14 +90,14 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}
+          Value: !Sub ${ProjectName}
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}
+          Value: !Sub ${ProjectName}
 
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -109,7 +112,7 @@ Resources:
       VpcId: !Ref Vpc
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}-public
+          Value: !Sub ${ProjectName}-public
         - Key: Type
           Value: public
 
@@ -133,7 +136,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-public-${AZ}
+            - ${ProjectName}-public-${AZ}
             - { AZ: !Select [0, !GetAZs ""] }
         - Key: Type
           Value: public
@@ -155,7 +158,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-public-${AZ}
+            - ${ProjectName}-public-${AZ}
             - { AZ: !Select [1, !GetAZs ""] }
         - Key: Type
           Value: public
@@ -177,7 +180,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-public-${AZ}
+            - ${ProjectName}-public-${AZ}
             - { AZ: !Select [2, !GetAZs ""] }
         - Key: Type
           Value: public
@@ -243,7 +246,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [0, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -255,7 +258,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [0, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -283,7 +286,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [1, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -295,7 +298,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [1, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -340,7 +343,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [2, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -352,7 +355,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${AWS::StackName}-private-${AZ}
+            - ${ProjectName}-private-${AZ}
             - { AZ: !Select [2, !GetAZs ""] }
         - Key: Type
           Value: private
@@ -430,7 +433,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Condition: VpcFlowLogs
     Properties:
-      LogGroupName: !Sub "FlowLogs/${AWS::StackName}"
+      LogGroupName: !Sub "FlowLogs/${ProjectName}"
       RetentionInDays: 7
 
   FlowLogsRole:
@@ -500,76 +503,76 @@ Outputs:
     Description: VPC Id
     Value: !Ref Vpc
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-vpc-id"
+      Name: !Sub "${ProjectName}-vpc-id"
 
   PublicRouteTableId:
     Description: Route Table for public subnets
     Value: !Ref PublicRouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-public-rtb"
+      Name: !Sub "${ProjectName}-public-rtb"
 
   PublicAZASubnetId:
     Description: Availability Zone A public subnet Id
     Value: !Ref PublicAZASubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-public-az-a-subnet"
+      Name: !Sub "${ProjectName}-public-az-a-subnet"
 
   PublicAZBSubnetId:
     Description: Availability Zone B public subnet Id
     Value: !Ref PublicAZBSubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-public-az-b-subnet"
+      Name: !Sub "${ProjectName}-public-az-b-subnet"
 
   PublicAZCSubnetId:
     Description: Availability Zone C public subnet Id
     Value: !Ref PublicAZCSubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-public-az-c-subnet"
+      Name: !Sub "${ProjectName}-public-az-c-subnet"
 
   PrivateAZASubnetId:
     Description: Availability Zone A private subnet Id
     Value: !Ref PrivateAZASubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-a-subnet"
+      Name: !Sub "${ProjectName}-private-az-a-subnet"
 
   PrivateAZBSubnetId:
     Description: Availability Zone B private subnet Id
     Value: !Ref PrivateAZBSubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-b-subnet"
+      Name: !Sub "${ProjectName}-private-az-b-subnet"
 
   PrivateAZCSubnetId:
     Description: Availability Zone C private subnet Id
     Value: !Ref PrivateAZCSubnet
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-c-subnet"
+      Name: !Sub "${ProjectName}-private-az-c-subnet"
 
   PrivateAZARouteTableId:
     Description: Route table for private subnets in AZ A
     Value: !Ref PrivateAZARouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-a-rtb"
+      Name: !Sub "${ProjectName}-private-az-a-rtb"
 
   PrivateAZBRouteTableId:
     Description: Route table for private subnets in AZ B
     Value: !Ref PrivateAZBRouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-b-rtb"
+      Name: !Sub "${ProjectName}-private-az-b-rtb"
 
   PrivateAZCRouteTableId:
     Description: Route table for private subnets in AZ C
     Value: !Ref PrivateAZCRouteTable
     Export:
-      Name: !Sub "${AWS::StackName}-vpc-private-az-c-rtb"
+      Name: !Sub "${ProjectName}-private-az-c-rtb"
 
   S3VPCEndpoint:
     Description: S3 VPC Endpoint
     Value: !Ref S3VPCEndpoint
     Export:
-      Name: !Sub '${AWS::StackName}-vpc-s3-vpc-endpoint'
+      Name: !Sub '${ProjectName}-s3-vpc-endpoint'
 
   DyanmodbVPCEndpoint:
     Description: Dynamodb VPC Endpoint
     Value: !Ref DynamoDBVPCEndpoint
     Export:
-      Name: !Sub '${AWS::StackName}-vpc-dynamodb-vpc-endpoint'
+      Name: !Sub '${ProjectName}-dynamodb-vpc-endpoint'
