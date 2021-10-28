@@ -17,6 +17,8 @@ test:
 	echo "target is $(target)"
 	echo "stackName is $(stackName)"
 
+# stackNameの引数はMakefile内に定義してあるので不要
+# make deploy target="$(target)"
 deploy:
 	aws cloudformation deploy \
 		--stack-name $(stackName)-$(target) \
