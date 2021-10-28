@@ -1,9 +1,6 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: >
-  Creates a VPC with public and private subnets for a given AWS Account.
-  This template incorporates many design ideas from this excellent blog post:
-    https://medium.com/aws-activate-startup-blog/practical-vpc-design-8412e1a18dcc#.g0txo2p4v
+Description: 'Crate VPC'
 
 Parameters:
   VpcCidrParam:

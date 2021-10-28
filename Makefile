@@ -18,3 +18,7 @@ deploy:
 		--parameter-overrides \
 		file://parameters/$(target).json \
 		--capabilities CAPABILITY_NAMED_IAM
+
+validate:
+	aws cloudformation validate-template \
+		--template-body file://$(target).yaml

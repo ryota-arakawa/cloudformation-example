@@ -1,14 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'VPC: Gateway Endpoint (DynamoDB), a cloudonaut.io template'
+Description: 'Create dynamodb endpoint in VPC'
 
 Resources:
   # dynamodbをVPC内からアクセスするためのエンドポイントを作成する
   Endpoint:
     Type: 'AWS::EC2::VPCEndpoint'
     Properties:
-      RouteTableIds: !Split [',', !Join [',', [{'Fn::ImportValue': !Sub 'example-vpc-public-rtb'}, {'Fn::ImportValue': !Sub 'example-vpc-private-az-a-rtb'}]]]
+      RouteTableIds: !Split [ ',', !Join [ ',', [ { 'Fn::ImportValue': !Sub 'example-vpc-public-rtb' }, { 'Fn::ImportValue': !Sub 'example-vpc-private-az-a-rtb' } ] ] ]
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
-      VpcId: {'Fn::ImportValue': !Sub 'example-vpc-vpc-id'}
+      VpcId: { 'Fn::ImportValue': !Sub 'example-vpc-vpc-id' }
 
 Outputs:
   TemplateID:

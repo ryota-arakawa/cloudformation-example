@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: 'Create Lambda functions and application loadbalancer'
+
+Parameters:
+  ItemsArn:
+    Type: String
+
+Resources:
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !ImportValue example-vpc-vpc-id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  SimpleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Simple Lambda Function That's Associated To Target Group
+      Handler: index.handler
+      Runtime: python3.7
+      InlineCode: |
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "statusDescription": "HTTP OK",
+            "isBase64Encoded": False,
+            "headers": {
+              "Content-Type": "text/html"
+            },
+            "body": "<h1>Hello from Lambda!</h1>"
+          }
+      Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          # マルチAZならここを増やす
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+
+  SimpleFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt SimpleFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: elasticloadbalancing.amazonaws.com
+
+  DyanamodbStreamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Associated Lambda Function to Dynamodb Stream
+      Handler: index.handler
+      Runtime: python3.7
+      InlineCode: |
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "statusDescription": "HTTP OK",
+            "isBase64Encoded": False,
+            "headers": {
+              "Content-Type": "text/html"
+            },
+            "body": "<h1>Hello from Lambda!</h1>"
+          }
+      Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref ItemsArn
+            BatchSize: 100
+            StartingPosition: LATEST
+
+  SqsTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Associated Lambda Function to SQS Trigger
+      Handler: index.handler
+      Runtime: python3.7
+      InlineCode: |
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "statusDescription": "HTTP OK",
+            "isBase64Encoded": False,
+            "headers": {
+              "Content-Type": "text/html"
+            },
+            "body": "<h1>Hello from Lambda!</h1>"
+          }
+      Timeout: 1
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
+
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      EventSourceArn: { 'Fn::ImportValue': !Sub 'dev-myapp-mail-queue-arn' }
+      FunctionName: !GetAtt SqsTriggerFunction.Arn
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow Lambda to assume this role
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: LambdaRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Allow Lambda to write logs to CloudWatch
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              # Allow Lambda to read from the DynamoDB stream
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                  - ec2:AssignPrivateIpAddresses
+                  - ec2:UnassignPrivateIpAddresses
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: arn:aws:sqs:*
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: SimpleFunctionInvokePermission
+    Properties:
+      TargetType: lambda
+      Targets:
+        - Id: !GetAtt SimpleFunction.Arn
+
+Outputs:
+  SimpleFunctionArn:
+    Value: !GetAtt SimpleFunction.Arn
+    Export:
+      Name: simple-function-arn
+  TargetGroupArn:
+    # 属性がない場合は!GetAttではなく!Refを用いる
+    Value: !Ref TargetGroup
+    Export:
+      Name: target-group-arn
