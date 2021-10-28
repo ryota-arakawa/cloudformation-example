@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Create SQS for ENV'
+Description: 'Create SQS'
 # --------------------------------------------- #
 # 画面に表示するパラメータ
 # --------------------------------------------- #
@@ -12,13 +12,20 @@ Metadata:
           - ENV
 
 # --------------------------------------------- #
-# Input Parameters
+# Parameters
 # --------------------------------------------- #
 Parameters:
   ENV:
     Type: String
     Default: "dev"
+  ParameterKey:
+    Type: String
+  ProjectName:
+    Type: String
 
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
 Resources:
   # ----------------------------------------------------- #
   # SQS Settings
@@ -36,16 +43,19 @@ Resources:
       MaximumMessageSize: 262144
       # SQSのメッセージ保持秒数 => Default 4日
       MessageRetentionPeriod: 345600
-      QueueName: !Sub ${ENV}-myapp-mail.fifo
+      QueueName: !Sub ${ProjectName}-myapp-mail.fifo
       # workerの負荷を抑えるためにロングポーリングにする => 最大20秒
       ReceiveMessageWaitTimeSeconds: 20
       Tags:
         -
           Key: Name
-          Value: !Sub ${ENV}-myapp-mail.fifo
+          Value: !Sub ${ProjectName}-myapp-mail.fifo
       # キューからメッセージ配信された後にメッセージを利用できなくなる時間の長さ(秒) => Default 30秒
       VisibilityTimeout: 30
 
+  # --------------------------------------------- #
+  # Policy
+  # --------------------------------------------- #
   SqsQaueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
@@ -67,7 +77,7 @@ Resources:
         - !Ref DevelopmentFIFOQueue
 
 # --------------------------------------------- #
-# Output Parameters
+# Outputs
 # --------------------------------------------- #
 # 他のスタックからパラメータ参照するためにOutputsで定義する
 Outputs:
@@ -75,9 +85,9 @@ Outputs:
     Value:
       !GetAtt DevelopmentFIFOQueue.QueueName
     Export:
-      Name: !Sub ${ENV}-myapp-mail-queue-name
+      Name: !Sub ${ProjectName}-myapp-mail-queue-name
   QueueArn:
     Value:
       !GetAtt DevelopmentFIFOQueue.Arn
     Export:
-      Name: !Sub ${ENV}-myapp-mail-queue-arn
+      Name: !Sub ${ProjectName}-myapp-mail-queue-arn

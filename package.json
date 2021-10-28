@@ -18,6 +18,7 @@
   "homepage": "https://github.com/misupopo/cloudformation-example#readme",
   "devDependencies": {
     "aws-sdk": "^2.1011.0",
-    "prettier": "^2.4.1"
+    "prettier": "^2.4.1",
+    "yargs": "^17.2.1"
   }
 }

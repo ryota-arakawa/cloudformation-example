@@ -1,3 +1,4 @@
+# todo あとでcommon.jsonのProjectNameの値と共通で管理できるようにしたい（二重管理をやめたい
 stackName := example
 
 ifeq ($(target), )
@@ -18,13 +19,26 @@ test:
 	echo "stackName is $(stackName)"
 
 # stackNameの引数はMakefile内に定義してあるので不要
-# make deploy target="$(target)"
+# jq -r 'keys[] as $k | "\($k)=\(.[$k])"' parameters/sqs.json
+# jqを試してみたがMakefileのコマンドと組み合わせてparameterを渡そうとしたが難しいのjsで実行する
 deploy:
+	cd scripts/cloudformation && node deploy.js -t $(target)
+
+# parameter-overridesが存在する場合はdeploy-with-paramsを実行
+deploy-with-params:
 	aws cloudformation deploy \
 		--stack-name $(stackName)-$(target) \
 		--template-file $(target).yaml \
 		--parameter-overrides \
-		file://parameters/$(target).json \
+		 $(params) \
+		--capabilities CAPABILITY_NAMED_IAM
+
+# parameterが存在したい場合はparameter-overridesのオプションを入れることができない
+# parameter-overridesのオプションは空白も許容されない
+deploy-without-params:
+	aws cloudformation deploy \
+		--stack-name $(stackName)-$(target) \
+		--template-file $(target).yaml \
 		--capabilities CAPABILITY_NAMED_IAM
 
 validate:
