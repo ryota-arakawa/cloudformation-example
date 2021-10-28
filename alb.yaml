@@ -2,12 +2,22 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: 'Create application loadbalancer'
 
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
+Parameters:
+  ProjectName:
+    Type: String
+
+# --------------------------------------------- #
+# Resources
+# --------------------------------------------- #
 Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
-      Subnets: [ 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet', 'Fn::ImportValue': !Sub 'example-vpc-public-az-b-subnet' ]
+      Subnets: [ 'Fn::ImportValue': !Sub '${ProjectName}-public-az-a-subnet', 'Fn::ImportValue': !Sub '${ProjectName}-public-az-b-subnet' ]
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
 
@@ -16,7 +26,7 @@ Resources:
     Properties:
       DefaultActions:
         # !Subは使えなかった
-        - TargetGroupArn: !ImportValue target-group-arn
+        - TargetGroupArn: { "Fn::ImportValue": { "Fn::Sub": "${ProjectName}-target-group-arn" } }
           Type: forward
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
@@ -27,7 +37,7 @@ Resources:
     Properties:
       Actions:
         - Type: forward
-          TargetGroupArn: !ImportValue target-group-arn
+          TargetGroupArn: { "Fn::ImportValue": { "Fn::Sub": "${ProjectName}-target-group-arn" } }
       Conditions:
         - Field: path-pattern
           Values: ['/static/*']
@@ -39,24 +49,30 @@ Resources:
 #    Properties:
 #      Actions:
 #        - Type: forward
-#          TargetGroupArn: !ImportValue target-group-arn
+#          TargetGroupArn: { "Fn::ImportValue": { "Fn::Sub": "${ProjectName}-target-group-arn" } }
 #      Conditions:
 #        - Field: path-pattern
 #          Values: !Sub arn/*
 #      ListenerArn: !Ref LoadBalancer
 #      Priority: 10
 
+  # --------------------------------------------- #
+  # Security Group
+  # --------------------------------------------- #
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow http to client host
-      VpcId: !ImportValue example-vpc-vpc-id
+      VpcId: { "Fn::ImportValue": { "Fn::Sub": "${ProjectName}-vpc-id" } }
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
+# --------------------------------------------- #
+# Outputs
+# --------------------------------------------- #
 Outputs:
   ApplicationLoadBalancerDNSName:
     Description: Application Load Balancer DNS Name
