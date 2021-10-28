@@ -1,12 +1,42 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'Create Lambda functions and application loadbalancer'
+Description: 'Lambda + Typescript Starter Project'
 
+Globals:
+  Function:
+    Timeout: 3
+
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
 Parameters:
-  ItemsArn:
+  DynamoDBEndpoint:
     Type: String
+    Description: DynamoDB Endpoint
+    # output.yamlはcloudformation実行用のyamlファイル（クラウドにあてる用）のためpublicのpath
+    # dynamodbがvpnであれば別スタックで定義してあるvpnのエンドポイントを参照する
+    Default: https://dynamodb.ap-northeast-1.amazonaws.com
+  Region:
+    Type: String
+    Description: AWS Deploy Region
+    Default: ap-northeast-1
+  S3Path:
+    Type: String
+    Default: example-lambda-1634779516
+  CommonResourcesLayerVersion:
+    Type: String
+    Default: v1.0
+  GreetingVersion:
+    Type: String
+    Default: v1.0
 
+# --------------------------------------------- #
+# Resources
+# --------------------------------------------- #
 Resources:
+  # --------------------------------------------- #
+  # Security Group
+  # --------------------------------------------- #
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -18,102 +48,71 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
-  SimpleFunction:
+  # --------------------------------------------- #
+  # Lambda Layers
+  # --------------------------------------------- #
+  CommonResourcesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: commonResourcesLayer
+      Description: Common Resource Layer
+      ContentUri:
+        Bucket: !Ref S3Path
+        Key: !Sub CommonResourcesLayer/${CommonResourcesLayerVersion}.zip
+      CompatibleRuntimes:
+        - nodejs12.x
+    Metadata:
+      BuildMethod: nodejs12.x
+
+  # --------------------------------------------- #
+  # Lambda Functions
+  # --------------------------------------------- #
+  Greeting:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Simple Lambda Function That's Associated To Target Group
-      Handler: index.handler
-      Runtime: python3.7
-      InlineCode: |
-        def handler(event, context):
-          return {
-            "statusCode": 200,
-            "statusDescription": "HTTP OK",
-            "isBase64Encoded": False,
-            "headers": {
-              "Content-Type": "text/html"
-            },
-            "body": "<h1>Hello from Lambda!</h1>"
-          }
-      Timeout: 1
+      # CodeUriのBucketをParametersの変数にするには予めzip化しておかないといけない
+      # なぜかハードコーディング（s3のフルパス）であればzipしないまま（フォルダーごと）s3にあがっていればデプロイができる
+      #      CodeUri: s3://example-lambda-1634779516/Greeting/v1.0
+      CodeUri:
+        Bucket: !Ref S3Path
+        Key: !Sub Greeting/${GreetingVersion}.zip
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          DYNAMODB_ENDPOINT:
+            Ref: DynamoDBEndpoint
+          REGION:
+            Ref: Region
+      Layers:
+        - Ref: CommonResourcesLayer
+      #      Events:
+      #        App:
+      #          Type: Api
+      #          Properties:
+      #            Path: /app/greeting
+      #            Method: get
       VpcConfig:
         SecurityGroupIds:
           - !Ref LambdaSecurityGroup
         SubnetIds:
           # マルチAZならここを増やす
           - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
 
-  SimpleFunctionInvokePermission:
+  # --------------------------------------------- #
+  # Lambda Invoke Permission
+  # --------------------------------------------- #
+  GreetingInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt SimpleFunction.Arn
+      FunctionName: !GetAtt Greeting.Arn
       Action: 'lambda:InvokeFunction'
       Principal: elasticloadbalancing.amazonaws.com
 
-  DyanamodbStreamFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Associated Lambda Function to Dynamodb Stream
-      Handler: index.handler
-      Runtime: python3.7
-      InlineCode: |
-        def handler(event, context):
-          return {
-            "statusCode": 200,
-            "statusDescription": "HTTP OK",
-            "isBase64Encoded": False,
-            "headers": {
-              "Content-Type": "text/html"
-            },
-            "body": "<h1>Hello from Lambda!</h1>"
-          }
-      Timeout: 1
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
-        SubnetIds:
-          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
-      Role: !GetAtt LambdaRole.Arn
-      Events:
-        Stream:
-          Type: DynamoDB
-          Properties:
-            Stream: !Ref ItemsArn
-            BatchSize: 100
-            StartingPosition: LATEST
-
-  SqsTriggerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Associated Lambda Function to SQS Trigger
-      Handler: index.handler
-      Runtime: python3.7
-      InlineCode: |
-        def handler(event, context):
-          return {
-            "statusCode": 200,
-            "statusDescription": "HTTP OK",
-            "isBase64Encoded": False,
-            "headers": {
-              "Content-Type": "text/html"
-            },
-            "body": "<h1>Hello from Lambda!</h1>"
-          }
-      Timeout: 1
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
-        SubnetIds:
-          - 'Fn::ImportValue': !Sub 'example-vpc-public-az-a-subnet'
-      Role: !GetAtt LambdaRole.Arn
-
-  EventSourceMapping:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      BatchSize: 1
-      EventSourceArn: { 'Fn::ImportValue': !Sub 'dev-myapp-mail-queue-arn' }
-      FunctionName: !GetAtt SqsTriggerFunction.Arn
-
+  # --------------------------------------------- #
+  # Lambda Role
+  # --------------------------------------------- #
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -127,7 +126,7 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: "/"
+      Path: '/'
       Policies:
         - PolicyName: LambdaRolePolicy
           PolicyDocument:
@@ -150,6 +149,33 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action:
+                  - dynamodb:DeleteItem
+                  - dynamodb:ListTagsOfResource
+                  - dynamodb:DescribeReservedCapacityOfferings
+                  - dynamodb:DescribeTable
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeContinuousBackups
+                  - dynamodb:DescribeLimits
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:PutItem
+                  - dynamodb:ListBackups
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:DescribeStream
+                  - dynamodb:UpdateItem
+                  - dynamodb:DescribeTimeToLive
+                  - dynamodb:ListStreams
+                  - dynamodb:DescribeGlobalTableSettings
+                  - dynamodb:ListGlobalTables
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeGlobalTable
+                  - dynamodb:DescribeReservedCapacity
+                  - dynamodb:DescribeBackup
+                  - dynamodb:GetRecords
+                Resource: "*"
+              - Effect: Allow
+                Action:
                   - ec2:CreateNetworkInterface
                   - ec2:DescribeNetworkInterfaces
                   - ec2:DeleteNetworkInterface
@@ -163,21 +189,34 @@ Resources:
                   - sqs:ReceiveMessage
                 Resource: arn:aws:sqs:*
 
+  # --------------------------------------------- #
+  # TargetGroup
+  # --------------------------------------------- #
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    DependsOn: SimpleFunctionInvokePermission
+    DependsOn: GreetingInvokePermission
     Properties:
       TargetType: lambda
       Targets:
-        - Id: !GetAtt SimpleFunction.Arn
+        - Id: !GetAtt Greeting.Arn
 
+# --------------------------------------------- #
+# Outputs
+# --------------------------------------------- #
 Outputs:
-  SimpleFunctionArn:
-    Value: !GetAtt SimpleFunction.Arn
+  CommonResourcesLayerVersion:
+    Value: !Ref CommonResourcesLayerVersion
     Export:
-      Name: simple-function-arn
+      Name: common-resoure-layer-version
+  GreetingVersion:
+    Value: !Ref GreetingVersion
+    Export:
+      Name: greeting-version
+  LambdaGreetingArn:
+    Value: !GetAtt Greeting.Arn
+    Export:
+      Name: lambda-greeting-arn
   TargetGroupArn:
-    # 属性がない場合は!GetAttではなく!Refを用いる
     Value: !Ref TargetGroup
     Export:
       Name: target-group-arn
