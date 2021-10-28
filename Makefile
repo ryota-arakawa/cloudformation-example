@@ -5,6 +5,12 @@ ifeq ($(target), )
 	@exit 1
 endif
 
+# スタックを固定するためstackNameはMakefileで定義された物でなければならない
+ifneq ($(stackName), example)
+	@echo "stackName must be defined variable in Makefile"
+	@exit 1
+endif
+
 # check arguments correctly
 # make test target="test"
 test:
