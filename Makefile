@@ -1,7 +1,14 @@
+# todo あとでcommon.jsonのProjectNameの値と共通で管理できるようにしたい（二重管理をやめたい
 stackName := example
 
 ifeq ($(target), )
 	@echo "you must add argument target"
+	@exit 1
+endif
+
+# スタックを固定するためstackNameはMakefileで定義された物でなければならない
+ifneq ($(stackName), example)
+	@echo "stackName must be defined variable in Makefile"
 	@exit 1
 endif
 
@@ -11,12 +18,27 @@ test:
 	echo "target is $(target)"
 	echo "stackName is $(stackName)"
 
+# stackNameの引数はMakefile内に定義してあるので不要
+# jq -r 'keys[] as $k | "\($k)=\(.[$k])"' parameters/sqs.json
+# jqを試してみたがMakefileのコマンドと組み合わせてparameterを渡そうとしたが難しいのjsで実行する
 deploy:
+	cd scripts/cloudformation && node deploy.js -t $(target)
+
+# parameter-overridesが存在する場合はdeploy-with-paramsを実行
+deploy-with-params:
 	aws cloudformation deploy \
 		--stack-name $(stackName)-$(target) \
 		--template-file $(target).yaml \
 		--parameter-overrides \
-		file://parameters/$(target).json \
+		 $(params) \
+		--capabilities CAPABILITY_NAMED_IAM
+
+# parameterが存在したい場合はparameter-overridesのオプションを入れることができない
+# parameter-overridesのオプションは空白も許容されない
+deploy-without-params:
+	aws cloudformation deploy \
+		--stack-name $(stackName)-$(target) \
+		--template-file $(target).yaml \
 		--capabilities CAPABILITY_NAMED_IAM
 
 validate:
