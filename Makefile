@@ -1,5 +1,9 @@
 # todo あとでcommon.jsonのProjectNameの値と共通で管理できるようにしたい（二重管理をやめたい
 stackName := example
+# .envファイルを読み込み
+# bucketNameなどの引数を入力するのが毎回面倒なので.envから参照する
+include .env
+environmentVariables:=$(shell sed -ne 's/ *\#.*$$//; /./ s/=.*$$// p' .env )
 
 ifeq ($(target), )
 	@echo "you must add argument target"
@@ -17,6 +21,11 @@ endif
 test:
 	echo "target is $(target)"
 	echo "stackName is $(stackName)"
+	echo "environmentVariables is $(environmentVariables)"
+	echo "LambdaBucketName is $(LambdaBucketName)"
+	echo "DynamodbBucketName is $(DynamodbBucketName)"
+
+####### deploy #######
 
 # stackNameの引数はMakefile内に定義してあるので不要
 # jq -r 'keys[] as $k | "\($k)=\(.[$k])"' parameters/sqs.json
@@ -40,6 +49,27 @@ deploy-without-params:
 		--stack-name $(stackName)-$(target) \
 		--template-file $(target).yaml \
 		--capabilities CAPABILITY_NAMED_IAM
+
+####### update #######
+# すでにスタックがあってバージョン情報などを更新する時
+
+# バージョン情報や環境変数などの要素を更新したいときに実行する
+# change-set-nameはversion1.0.1などの小数点は入力できない
+update-package:
+	aws cloudformation create-change-set \
+		--stack-name $(stackName)-$(target) \
+		--template-body file://$(target).yaml \
+		--change-set-name $(changeSetName) \
+		--capabilities CAPABILITY_IAM
+
+# スタックを更新するための実行コマンド
+# 事前に同じchangeSetNameをupdate-packageで行なってからexecute-update-packageを実行することができる
+execute-update-package:
+	aws cloudformation execute-change-set \
+		--stack-name $(stackName)-$(target) \
+		--change-set-name $(changeSetName)
+
+####### validate #######
 
 validate:
 	aws cloudformation validate-template \

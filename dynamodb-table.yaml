@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "DynamoDB Global Table Replica Test"
+
+# --------------------------------------------- #
+# Metadata
+# --------------------------------------------- #
+# Organizes How the Parameters appear in the CloudFormation Interface
+# cloudformationをGUIで入力するときに求められるパラメーター画面
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: 'Dynamodb Parameter'
+        Parameters:
+          - DynamoDBTableName
+          - DynamoDBTableName1
+
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
+Parameters:
+  DynamoDBTableName:
+    Description: 'Name to use when creating the DynamoDB Replica table'
+    Type: String
+    Default: 'TestTable'
+    AllowedPattern: '[a-zA-Z0-9_.-]+'
+    MaxLength: 255
+    MinLength: 3
+  DynamoDBTableName1:
+    Description: 'Name to use when creating the DynamoDB Replica table'
+    Type: String
+    Default: 'TestTable1'
+    AllowedPattern: '[a-zA-Z0-9_.-]+'
+    MaxLength: 255
+    MinLength: 3
+
+# --------------------------------------------- #
+# Parameters
+# --------------------------------------------- #
+Resources:
+  ExampleTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  ExampleTable1:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Ref DynamoDBTableName1
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
