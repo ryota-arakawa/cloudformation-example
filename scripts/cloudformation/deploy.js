@@ -49,6 +49,11 @@ const argv = yargs
   };
 
   const readJsonFile = (target) => {
+    // 対象のファイルが存在しない場合は空のオブジェクトを返す
+    if (!fs.existsSync(`${parametersPath}/${target}.json`)) {
+      return {};
+    }
+
     return JSON.parse(fs.readFileSync(`${parametersPath}/${target}.json`, 'utf8'));
   };
 
@@ -58,7 +63,7 @@ const argv = yargs
     }
 
     // commonは共通のparameter
-    const commonParams = readJsonFile('common');
+    const commonParams = readJsonFile('common1');
     const targetParams = readJsonFile(argv.target);
 
     // 共通で使うパラメーターと対象のパラメーターをマージする
