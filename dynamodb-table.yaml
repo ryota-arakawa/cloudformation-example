@@ -12,37 +12,45 @@ Metadata:
       - Label:
           default: 'Dynamodb Parameter'
         Parameters:
-          - DynamoDBTableName
-          - DynamoDBTableName1
+          - NotificationsTableName
+          - UsersTableName
 
 # --------------------------------------------- #
 # Parameters
 # --------------------------------------------- #
 Parameters:
-  DynamoDBTableName:
-    Description: 'Name to use when creating the DynamoDB Replica table'
+  ProjectName:
     Type: String
-    Default: 'TestTable'
+
+  NotificationsTableName:
+    Description: 'Notifications table name'
+    Type: String
+    Default: 'Notifications'
     AllowedPattern: '[a-zA-Z0-9_.-]+'
     MaxLength: 255
     MinLength: 3
-  DynamoDBTableName1:
-    Description: 'Name to use when creating the DynamoDB Replica table'
+
+  UsersTableName:
+    Description: 'Users table name'
     Type: String
-    Default: 'TestTable1'
+    Default: 'Users'
     AllowedPattern: '[a-zA-Z0-9_.-]+'
     MaxLength: 255
     MinLength: 3
 
 # --------------------------------------------- #
-# Parameters
+# Resources
 # --------------------------------------------- #
+# スタックを削除してもdynamodbのテーブルは削除されないので注意
 Resources:
-  ExampleTable:
+  # ----------------------------------------------------- #
+  # Dynamodb Table
+  # ----------------------------------------------------- #
+  NotificationsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     Properties:
-      TableName: !Ref DynamoDBTableName
+      TableName: !Ref NotificationsTableName
       AttributeDefinitions:
         - AttributeName: Id
           AttributeType: S
@@ -54,11 +62,12 @@ Resources:
         WriteCapacityUnits: 2
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
-  ExampleTable1:
+
+  UsersTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     Properties:
-      TableName: !Ref DynamoDBTableName1
+      TableName: !Ref UsersTableName
       AttributeDefinitions:
         - AttributeName: Id
           AttributeType: S
@@ -70,3 +79,16 @@ Resources:
         WriteCapacityUnits: 2
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+
+# --------------------------------------------- #
+# Outputs
+# --------------------------------------------- #
+Outputs:
+  NotificationsTableArn:
+    Value: !GetAtt NotificationsTable.StreamArn
+    Export:
+      Name: !Sub ${ProjectName}-notifications-table-arn
+  UsersTableArn:
+    Value: !GetAtt UsersTable.StreamArn
+    Export:
+      Name: !Sub ${ProjectName}-users-table-arn

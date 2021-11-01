@@ -63,7 +63,7 @@ const argv = yargs
     }
 
     // commonは共通のparameter
-    const commonParams = readJsonFile('common1');
+    const commonParams = readJsonFile('common');
     const targetParams = readJsonFile(argv.target);
 
     // 共通で使うパラメーターと対象のパラメーターをマージする

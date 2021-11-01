@@ -69,6 +69,11 @@ execute-update-package:
 		--stack-name $(stackName)-$(target) \
 		--change-set-name $(changeSetName)
 
+# 途中まで入力したchange-setを出力する
+list-change-set:
+	aws cloudformation list-change-sets \
+		--stack-name $(stackName)-$(target)
+
 ####### validate #######
 
 validate:
