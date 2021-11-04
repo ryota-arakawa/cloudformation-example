@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create OIDC Provider"
+
+Parameters:
+  RepoName:
+    Type: String
+    Default: misupopo/github-action-test
+  Owner:
+    Type: String
+    Default: misupopo
+
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ExampleGithubRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GithubOidc
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${RepoName}:*
+
+  Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: test-gha
+      Roles:
+        - !Ref Role
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:*'
+              - 'sts:GetCallerIdentity'
+              - 's3:*'
+            Resource: '*'
+
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider # Intellijのエディターでは赤くなっているがcloudformationは実行可能
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ThumbprintList: [a031c46782e6e6c662c2c87c76da9aa62ccabd8e]
+      ClientIdList: !Split [ ',', !Join [ ',', [ !Sub 'https://github.com/${Owner}/github-action-test' ] ] ]
+
+Outputs:
+  Role:
+    Value: !GetAtt Role.Arn
