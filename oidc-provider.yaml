@@ -5,9 +5,10 @@ Parameters:
   RepoName:
     Type: String
     Default: misupopo/github-action-test
-  Owner:
-    Type: String
-    Default: misupopo
+# ClientIdListがsigstoreのみなのでOwnerパラメータは不要
+#  Owner:
+#    Type: String
+#    Default: misupopo
 
 Resources:
   Role:
@@ -23,6 +24,13 @@ Resources:
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${RepoName}:*
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GithubOidc
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: repo:misupopo/lambda-typescript:*
 
   Policy:
     Type: AWS::IAM::Policy
