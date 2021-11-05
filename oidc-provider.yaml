@@ -45,7 +45,10 @@ Resources:
     Properties:
       Url: https://token.actions.githubusercontent.com
       ThumbprintList: [a031c46782e6e6c662c2c87c76da9aa62ccabd8e]
-      ClientIdList: !Split [ ',', !Join [ ',', [ !Sub 'https://github.com/${Owner}/github-action-test' ] ] ]
+      ClientIdList:
+        - sigstore # ClientIdListはsigstoreじゃないと反応しなかった
+#        - !Sub https://github.com/${Owner}
+#      ClientIdList: !Split [ ',', !Join [ ',', [ !Sub 'https://github.com/${Owner}/github-action-test' ] ] ]
 
 Outputs:
   Role:
