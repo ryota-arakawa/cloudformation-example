@@ -76,7 +76,7 @@ console.log(`Environment is ${!argv.environment ? 'dev' : argv.environment}`);
 
     // 共通で使うパラメーターと対象のパラメーターをマージする
     await deploy(Object.assign(commonParams, targetParams), argv.target);
-    console.log(`success deploy template ${parametersPath}`);
+    console.log(`success deploy template ${parametersPath}/${argv.target}.yaml`);
   } catch (e) {
     console.error(e);
     process.exit(1);
