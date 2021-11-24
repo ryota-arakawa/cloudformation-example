@@ -22,16 +22,15 @@ test:
 	echo "target is $(target)"
 	echo "stackName is $(stackName)"
 	echo "environmentVariables is $(environmentVariables)"
-	echo "LambdaBucketName is $(LambdaBucketName)"
-	echo "DynamodbBucketName is $(DynamodbBucketName)"
+	echo "Environment is $(Environment)"
 
 ####### deploy #######
 
 # stackNameの引数はMakefile内に定義してあるので不要
 # jq -r 'keys[] as $k | "\($k)=\(.[$k])"' parameters/sqs.json
-# jqを試してみたがMakefileのコマンドと組み合わせてparameterを渡そうとしたが難しいのjsで実行する
+# jqを試してみたがMakefileのコマンドと組み合わせてparameterを渡そうとしたが難しいのjsファイル（deploy.js）で実行する
 deploy:
-	cd scripts/cloudformation && node deploy.js -t $(target)
+	cd scripts/cloudformation && node deploy.js -t $(target) -e $(Environment)
 
 # parameter-overridesが存在する場合はdeploy-with-paramsを実行
 deploy-with-params:

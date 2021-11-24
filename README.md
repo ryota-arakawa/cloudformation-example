@@ -2,6 +2,15 @@
 cloudformationのサンプルです。alb、dynamodb、lambda、github actions、vpc、sqsなどと連携できます。
 
 ## デプロイ
+### Envの設定
+.envファイルをまず初めに設定してください。Environmentはparameters配下のdirectoryを指します。
+```
+.env
+Environment=dev
+```
+
+### makeコマンドのデプロイ
+
 scripts/cloudformation/deploy.js を使ってデプロイします。
 deploy.jsは parameters/$(target).json と parameters/common.json のパラメーターをマージして
 デプロイします。
