@@ -1,5 +1,4 @@
 const fs = require('fs');
-const parametersPath = '../../parameters';
 const { exec } = require('child_process');
 const yargs = require('yargs');
 
@@ -9,7 +8,16 @@ const argv = yargs
     description: 'create zip directory',
     demandOption: true,
   })
+  .option('environment', {
+    alias: 'e',
+    description: 'handling parameters with env',
+    demandOption: true,
+  })
   .help().argv;
+
+const parametersPath = `../../parameters/${!argv.environment ? 'dev' : argv.environment}`;
+
+console.log(`Environment is ${!argv.environment ? 'dev' : argv.environment}`);
 
 (async () => {
   const deploy = (params, target) => {
@@ -68,6 +76,7 @@ const argv = yargs
 
     // 共通で使うパラメーターと対象のパラメーターをマージする
     await deploy(Object.assign(commonParams, targetParams), argv.target);
+    console.log(`success deploy template ${parametersPath}`);
   } catch (e) {
     console.error(e);
     process.exit(1);
