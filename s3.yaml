@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: This CloudFormation template to create S3 Bucket
 
 Parameters:
+  ProjectName:
+    Type: String
+
   S3BucketName:
     Description: Type of this BacketName.
     Type: String
