@@ -27,7 +27,6 @@ Parameters:
 
   S3Path:
     Type: String
-    Default: example-lambda-1634779516
 
   CommonResourcesLayerVersion:
     Type: String
