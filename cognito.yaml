@@ -281,12 +281,12 @@ Outputs:
   UserPoolId:
     Value: !Ref UserPool
     Export:
-      Name: "UserPool::Id"
+      Name: !Sub ${ProjectName}-user-pool-id
   UserPoolClientId:
     Value: !Ref UserPoolClient
     Export:
-      Name: "UserPoolClient::Id"
+      Name: !Sub ${ProjectName}-user-pool-client-id
   IdentityPoolId:
     Value: !Ref IdentityPool
     Export:
-      Name: "IdentityPool::Id"
+      Name: !Sub ${ProjectName}-identity-pool-id
