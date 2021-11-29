@@ -127,9 +127,11 @@ Parameters:
     Default: 7
     MinValue: 7
     MaxValue: 14
+  # AllowAdminCreateUserOnlyをTrueにすると管理者以外はユーザーを作成することができない
+  # Trueにすると一時的なパスワードから本当のパスワードに変更するする必要がある
   AllowAdminCreateUserOnly:
     Type: String
-    Default: True
+    Default: False
     AllowedValues:
       - True
       - False
