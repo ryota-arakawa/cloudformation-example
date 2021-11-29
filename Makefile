@@ -29,6 +29,7 @@ test:
 # stackNameの引数はMakefile内に定義してあるので不要
 # jq -r 'keys[] as $k | "\($k)=\(.[$k])"' parameters/sqs.json
 # jqを試してみたがMakefileのコマンドと組み合わせてparameterを渡そうとしたが難しいのjsファイル（deploy.js）で実行する
+# Environmentは与えければdevがdefault
 deploy:
 	cd scripts/cloudformation && node deploy.js -t $(target) -e $(Environment)
 
@@ -41,7 +42,7 @@ deploy-with-params:
 		 $(params) \
 		--capabilities CAPABILITY_NAMED_IAM
 
-# parameterが存在したい場合はparameter-overridesのオプションを入れることができない
+# parameterが存在しない場合はparameter-overridesのオプションを入れることができない
 # parameter-overridesのオプションは空白も許容されない
 deploy-without-params:
 	aws cloudformation deploy \
