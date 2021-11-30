@@ -30,7 +30,7 @@ Resources:
               Federated: !Ref GithubOidc
             Condition:
               StringLike:
-                token.actions.githubusercontent.com:sub: repo:misupopo/lambda-typescript:*
+                token.actions.githubusercontent.com:sub: repo:ryota-arakawa/lambda-typescript:*
 
   Policy:
     Type: AWS::IAM::Policy
