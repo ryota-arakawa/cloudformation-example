@@ -36,6 +36,10 @@ Parameters:
     Type: String
     Default: v1.0
 
+  NotificationsLambdaFunctionVersion:
+    Type: String
+    Default: v1.0
+
 # --------------------------------------------- #
 # Resources
 # --------------------------------------------- #
@@ -74,6 +78,31 @@ Resources:
   # --------------------------------------------- #
   # Lambda Functions
   # --------------------------------------------- #
+  NotificationsLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: !Ref S3Path
+        Key: !Sub NotificationsLambdaFunction/${NotificationsLambdaFunctionVersion}.zip
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Timeout: 10
+      MemorySize: 256
+      Handler: appsync.handler
+      Environment:
+        Variables:
+          DYNAMODB_ENDPOINT:
+            Ref: DynamoDBEndpoint
+          REGION:
+            Ref: Region
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          # マルチAZならここを増やす
+          - 'Fn::ImportValue': !Sub '${ProjectName}-public-az-a-subnet'
+      Role: !GetAtt LambdaRole.Arn
+
   Greeting:
     Type: AWS::Serverless::Function
     Properties:
