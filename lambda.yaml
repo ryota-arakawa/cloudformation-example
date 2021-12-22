@@ -247,18 +247,10 @@ Outputs:
     Value: !Ref GreetingVersion
     Export:
       Name: greeting-version
-  NotificationsLambdaFunctionVersion:
-    Value: !Ref NotificationsLambdaFunctionVersion
-    Export:
-      Name: notifications-version
   LambdaGreetingArn:
     Value: !GetAtt Greeting.Arn
     Export:
       Name: lambda-greeting-arn
-  NotificationsLambdaFunctionArn:
-    Value: !GetAtt NotificationsLambdaFunction.Arn
-    Export:
-      Name: lambda-notification-arn
   TargetGroupArn:
     Value: !Ref TargetGroup
     Export:

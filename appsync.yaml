@@ -43,63 +43,8 @@ Resources:
     Type: "AWS::AppSync::GraphQLSchema"
     Properties:
       ApiId: !GetAtt NotificationsGraphQLApi.ApiId
-     # DefinitionS3Location: ./schema.graphql
-      Definition: |
-          type Notification {
-            customerId: String!
-            notificationId: String!
-            name: String
-            email: String
-            company: String
-          }
+      DefinitionS3Location: ./schema.graphql
 
-          type Todo {
-            id: String
-            content: String
-          }
-
-          type User {
-            id: String
-            name: String
-            todos: [Todo]
-          }
-
-          type Users {
-            items: [User]
-          }
-
-          type NotificationsPage {
-            items: [Notification]
-            nextToken: String
-          }
-
-          type Mutation {
-            saveNotification(
-              customerId: String!,
-              notificationId: String!,
-              name: String!,
-              email: String!,
-              company: String!
-              description: String!
-            ): Notification
-            deleteNotification(customerId: String!, notificationId: String!): Notification
-          }
-
-          type Query {
-            getNotification(customerId: String!, notificationId: String!): Notification
-            listNotificationByCustomer(customerId: String!, nextToken: String, limit: Int = 20): NotificationsPage
-            listUsers: Users
-          }
-
-          type Subscription {
-            newNotification(customerId: String!): Notification @aws_subscribe(mutations: ["saveNotification"])
-          }
-
-          schema {
-            query: Query
-            mutation: Mutation
-          }
-          
  # --------------------------------------------- #
  # AppSync Role
  # --------------------------------------------- #
@@ -129,8 +74,7 @@ Resources:
         - Effect: Allow
           Action:
           - lambda:*
-          Resource: !ImportValue lambda-notification-arn
-          #!GetAtt NotificationsLambdaFunction.Arn
+          Resource: !GetAtt NotificationsLambdaFunction.Arn
       Roles:
       - !Ref AppSyncServiceRole
 
@@ -143,8 +87,7 @@ Resources:
       Type: "AWS_LAMBDA"
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
-        LambdaFunctionArn: !ImportValue lambda-notification-arn
-          #- 'Fn::GetAtt': NotificationsLambdaFunction.Arn
+        LambdaFunctionArn: !GetAtt NotificationsLambdaFunction.Arn
 
   GetNotificationsQueryResolver:
     Type: "AWS::AppSync::Resolver"
