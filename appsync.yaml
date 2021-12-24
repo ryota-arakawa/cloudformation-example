@@ -129,7 +129,8 @@ Resources:
         - Effect: Allow
           Action:
           - lambda:*
-          Resource: !GetAtt NotificationsLambdaFunction.Arn
+          Resource: !ImportValue lambda-notification-arn
+          #!GetAtt NotificationsLambdaFunction.Arn
       Roles:
       - !Ref AppSyncServiceRole
 
@@ -142,7 +143,8 @@ Resources:
       Type: "AWS_LAMBDA"
       ServiceRoleArn: !GetAtt AppSyncServiceRole.Arn
       LambdaConfig:
-        LambdaFunctionArn: !GetAtt NotificationsLambdaFunction.Arn
+        LambdaFunctionArn: !ImportValue lambda-notification-arn
+          #- 'Fn::GetAtt': NotificationsLambdaFunction.Arn
 
   GetNotificationsQueryResolver:
     Type: "AWS::AppSync::Resolver"
